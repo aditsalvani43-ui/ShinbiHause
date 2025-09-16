@@ -1,52 +1,35 @@
+// pages/index.js
 import { useState } from 'react';
-import '../styles/globals.css';
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  async function sendMessage() {
-    if (!input.trim()) return;
-
-    const newMessages = [...messages, { role: 'user', content: input }];
-    setMessages(newMessages);
-    setInput('');
-    setLoading(true);
-
+  const sendMessage = async () => {
+    if (!input) return;
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: newMessages })
+      body: JSON.stringify({ message: input }),
     });
-
     const data = await res.json();
-    setMessages([...newMessages, { role: 'assistant', content: data.reply }]);
-    setLoading(false);
-  }
+    setMessages([...messages, { role: 'user', content: input }, { role: 'ai', content: data.reply }]);
+    setInput('');
+  };
 
   return (
     <div className="chat-container">
-      <h1>Ditzy AI</h1>
+      <h1>AI Chat</h1>
       <div className="chat-box">
-        {messages.map((msg, i) => (
-          <div key={i} className={msg.role === 'user' ? 'user-msg' : 'ai-msg'}>
-            <strong>{msg.role === 'user' ? 'You: ' : 'AI: '}</strong>
-            {msg.content}
+        {messages.map((m, i) => (
+          <div key={i} className={m.role}>
+            <b>{m.role === 'user' ? 'You: ' : 'AI: '}</b>
+            {m.content}
           </div>
         ))}
-        {loading && <div className="ai-msg">AI is typing...</div>}
       </div>
-      <div className="input-box">
-        <input
-          type="text"
-          placeholder="Tulis pesan..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-        />
-        <button onClick={sendMessage}>Kirim</button>
-      </div>
+      <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Tulis pesan..." />
+      <button onClick={sendMessage}>Kirim</button>
     </div>
   );
     }
